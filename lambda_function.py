@@ -15,8 +15,12 @@ import os
 import dateutil.parser
 import logging
 
+import boto3
+
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 
 # --- Helpers that build all of the responses ---
@@ -282,18 +286,58 @@ def validate_get_current_spot_price(slots):
     if instance_type and not isvalid_instance_type(instance_type):
         return build_validation_result(
             False,
-            'InstanType',
+            'InstanceType',
             'We currently do not support {} as a valid instance type.  Can you try a different instance type?'.format(instance_type)
         )
 
     if amazon_region and not isvalid_amazon_region(amazon_region):
+        # specific message in case the person tried to get his own region information
+        if amazon_region == 'my region':
+            message = 'Sorry, I\'m not that smart! What is your region?'
+        else:
+            message = 'We currently do not support {} as a valid Amazon region.  Can you try a different Amazon region?'.format(amazon_region)
         return build_validation_result(
             False,
             'AmazonRegion',
-            'We currently do not support {} as a valid Amazon region.  Can you try a different Amazon region?'.format(amazon_region)
+            message
+        )
+
+    if instance_type and amazon_region and not get_price_history([instance_type], amazon_region):
+        return build_validation_result(
+            False,
+            'InstanceType',
+            ('I am afraid I cannot get this information. {} instances might not be available spot instances in {}. '
+             'Please enter another instance type').format(instance_type, amazon_region)
         )
 
     return {'isValid': True}
+
+
+""" --- Backend function getting the requested information --- """
+
+def get_price_history(instance_types, amazon_region):
+
+    client = boto3.client('ec2', region_name=amazon_region)
+
+    response = client.describe_spot_price_history(
+        StartTime=datetime.datetime.utcnow(),
+        InstanceTypes=instance_types,
+        ProductDescriptions=['Linux/UNIX']
+    )
+
+    prices = []
+    # return a list of tuples [(price, availability-zone)]
+    for price in response['SpotPriceHistory']:
+        prices.append((float(price['SpotPrice']), price['AvailabilityZone']))
+
+    return prices
+
+def format_price_answer(spot_prices):
+    """
+    Receive a list of tuples [(price, availability-zone)]
+    Return a string
+    """
+    return ", ".join("{:.2f}$ in {}".format(*price) for price in spot_prices)
 
 
 """ --- Functions that control the bot's behavior --- """
@@ -552,82 +596,22 @@ def get_current_spot_price(intent_request):
                 validation_result['message']
             )
 
+        # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
+        return delegate(session_attributes, intent_request['currentIntent']['slots'])
 
-        if confirmation_status == 'None':
-            # If we are currently auto-populating but have not gotten confirmation, keep requesting for confirmation.
-            if (not pickup_city and not pickup_date and not return_date and not driver_age and not car_type)\
-                    or confirmation_context == 'AutoPopulate':
-                if last_confirmed_reservation and try_ex(lambda: last_confirmed_reservation['ReservationType']) == 'Hotel':
-                    # If the user's previous reservation was a hotel - prompt for a rental with
-                    # auto-populated values to match this reservation.
-                    session_attributes['confirmationContext'] = 'AutoPopulate'
-                    return confirm_intent(
-                        session_attributes,
-                        intent_request['currentIntent']['name'],
-                        {
-                            'PickUpCity': last_confirmed_reservation['Location'],
-                            'PickUpDate': last_confirmed_reservation['CheckInDate'],
-                            'ReturnDate': add_days(
-                                last_confirmed_reservation['CheckInDate'], last_confirmed_reservation['Nights']
-                            ),
-                            'CarType': None,
-                            'DriverAge': None
-                        },
-                        {
-                            'contentType': 'PlainText',
-                            'content': 'Is this car rental for your {} night stay in {} on {}?'.format(
-                                last_confirmed_reservation['Nights'],
-                                last_confirmed_reservation['Location'],
-                                last_confirmed_reservation['CheckInDate']
-                            )
-                        }
-                    )
 
-            # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
-            return delegate(session_attributes, intent_request['currentIntent']['slots'])
+    # Display value. Call backend
+    # We get the info and we format the answer
+    spot_prices_result = get_price_history([instance_type], amazon_region)
+    spot_prices_message = format_price_answer(spot_prices_result)
 
-        # If confirmation has occurred, continue filling any unfilled slot values or pass to fulfillment.
-        if confirmation_status == 'Confirmed':
-            # Remove confirmationContext from sessionAttributes so it does not confuse future requests
-            try_ex(lambda: session_attributes.pop('confirmationContext'))
-            if confirmation_context == 'AutoPopulate':
-                if not driver_age:
-                    return elicit_slot(
-                        session_attributes,
-                        intent_request['currentIntent']['name'],
-                        intent_request['currentIntent']['slots'],
-                        'DriverAge',
-                        {
-                            'contentType': 'PlainText',
-                            'content': 'How old is the driver of this car rental?'
-                        }
-                    )
-                elif not car_type:
-                    return elicit_slot(
-                        session_attributes,
-                        intent_request['currentIntent']['name'],
-                        intent_request['currentIntent']['slots'],
-                        'CarType',
-                        {
-                            'contentType': 'PlainText',
-                            'content': 'What type of car would you like? Popular models are '
-                                       'economy, midsize, and luxury.'
-                        }
-                    )
-
-            return delegate(session_attributes, intent_request['currentIntent']['slots'])
-
-    # Booking the car.  In a real application, this would likely involve a call to a backend service.
-    logger.debug('bookCar at={}'.format(reservation))
-    del session_attributes['currentReservationPrice']
-    del session_attributes['currentReservation']
-    session_attributes['lastConfirmedReservation'] = reservation
+    logger.debug('Current price  for {} instance type in {} is {}'.format(instance_type, amazon_region, spot_prices_message))
     return close(
         session_attributes,
         'Fulfilled',
         {
             'contentType': 'PlainText',
-            'content': 'Thanks, I have placed your reservation.'
+            'content': 'The current spot price for a {} instance in {} is {}.'.format(instance_type, amazon_region, spot_prices_message)
         }
     )
 
@@ -648,7 +632,7 @@ def dispatch(intent_request):
         return book_hotel(intent_request)
     elif intent_name == 'BookCar':
         return book_car(intent_request)
-    elif intent_name == 'GetCurrentSpotInstancePrice'
+    elif intent_name == 'GetCurrentSpotInstancePrice':
         return get_current_spot_price(intent_request)
 
     raise Exception('Intent with name ' + intent_name + ' not supported')
