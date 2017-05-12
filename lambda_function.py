@@ -180,6 +180,17 @@ def isvalid_amazon_region(amazon_region):
                       'sa-east-1']
     return amazon_region.lower() in amazon_regions
 
+def isvalid_memory(memory):
+    """
+    It's not valid if the memory is expressed in something else than GB
+    """
+    invalid_units = ['kb', 'mb', 'tb', 'pt']
+    for unit in invalid_units:
+        if unit in memory.lower():
+            return False
+    else:
+        return True
+
 def get_day_difference(later_date, earlier_date):
     later_datetime = dateutil.parser.parse(later_date).date()
     earlier_datetime = dateutil.parser.parse(earlier_date).date()
@@ -280,8 +291,8 @@ def validate_hotel(slots):
     return {'isValid': True}
 
 def validate_get_current_spot_price(slots):
-    instance_type = try_ex(lambda: slots['InstanceType'])
-    amazon_region = try_ex(lambda: slots['AmazonRegion'])
+    instance_type = slots.get('InstanceType') if slots else None
+    amazon_region = slots.get('AmazonRegion') if slots else None
 
     if instance_type and not isvalid_instance_type(instance_type):
         return build_validation_result(
@@ -306,9 +317,44 @@ def validate_get_current_spot_price(slots):
         return build_validation_result(
             False,
             'InstanceType',
-            ('I am afraid I cannot get this information. {} instances might not be available spot instances in {}. '
+            ('I am afraid I cannot get this information. {} might not be available as a spot instance in {}. '
              'Please enter another instance type').format(instance_type, amazon_region)
         )
+
+    return {'isValid': True}
+
+def validate_get_cheapest_spot_price(slots):
+    amazon_region = slots.get('AmazonRegion') if slots else None
+    memory = slots.get('Memory') if slots else None
+    cpu = slots.get('CPUs') if slots else None
+
+    if amazon_region and not isvalid_amazon_region(amazon_region):
+        # specific message in case the person tried to get his own region information
+        if amazon_region == 'my region':
+            message = 'Sorry, I\'m not that smart! What is your region?'
+        else:
+            message = 'We currently do not support {} as a valid Amazon region.  Can you try a different Amazon region?'.format(amazon_region)
+        return build_validation_result(
+            False,
+            'AmazonRegion',
+            message
+        )
+
+    if memory and not isvalid_memory(memory):
+        return build_validation_result(
+            False,
+            'Memory',
+            'We currently only support GB as a memory unit. How much memory do you require in GB?'
+        )
+
+
+    # if instance_type and amazon_region and not get_price_history([instance_type], amazon_region):
+    #     return build_validation_result(
+    #         False,
+    #         'InstanceType',
+    #         ('I am afraid I cannot get this information. {} might not be available as a spot instance in {}. '
+    #          'Please enter another instance type').format(instance_type, amazon_region)
+    #     )
 
     return {'isValid': True}
 
@@ -319,11 +365,15 @@ def get_price_history(instance_types, amazon_region):
 
     client = boto3.client('ec2', region_name=amazon_region)
 
-    response = client.describe_spot_price_history(
-        StartTime=datetime.datetime.utcnow(),
-        InstanceTypes=instance_types,
-        ProductDescriptions=['Linux/UNIX']
-    )
+    try:
+        response = client.describe_spot_price_history(
+            StartTime=datetime.datetime.utcnow(),
+            InstanceTypes=instance_types,
+            ProductDescriptions=['Linux/UNIX (Amazon VPC)']
+        )
+    except Exception as e:
+        logger.exception(e)
+        return []
 
     prices = []
     # return a list of tuples [(price, availability-zone)]
@@ -337,7 +387,7 @@ def format_price_answer(spot_prices):
     Receive a list of tuples [(price, availability-zone)]
     Return a string
     """
-    return ", ".join("{:.2f}$ in {}".format(*price) for price in spot_prices)
+    return "\n".join("*{:.2f}$* in {}".format(*price) for price in spot_prices)
 
 
 """ --- Functions that control the bot's behavior --- """
@@ -351,7 +401,6 @@ def book_hotel(intent_request):
     1) Use of elicitSlot in slot validation and re-prompting
     2) Use of sessionAttributes to pass information that can be used to guide conversation
     """
-
     location = try_ex(lambda: intent_request['currentIntent']['slots']['Location'])
     checkin_date = try_ex(lambda: intent_request['currentIntent']['slots']['CheckInDate'])
     nights = safe_int(try_ex(lambda: intent_request['currentIntent']['slots']['Nights']))
@@ -577,11 +626,13 @@ def get_current_spot_price(intent_request):
     1) Use of elicitSlot in slot validation and re-prompting
     2) Use of sessionAttributes to pass information that can be used to guide conversation
     """
-    slots = intent_request['currentIntent']['slots']
-    instance_type = slots['InstanceType']
-    amazon_region = slots['AmazonRegion']
-    confirmation_status = intent_request['currentIntent']['confirmationStatus']
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+    logger.debug('Current Intent: {}'.format(intent_request['currentIntent']))
+    current = intent_request.get('currentIntent')
+    slots = current.get('slots') if current else None
+    instance_type = slots.get('InstanceType') if slots else None
+    amazon_region = slots.get('AmazonRegion') if slots else None
+    # confirmation_status = current['confirmationStatus']
+    session_attributes = intent_request['sessionAttributes'] if intent_request.get('sessionAttributes') is not None else {}
 
     if intent_request['invocationSource'] == 'DialogCodeHook':
         # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
@@ -611,7 +662,66 @@ def get_current_spot_price(intent_request):
         'Fulfilled',
         {
             'contentType': 'PlainText',
-            'content': 'The current spot price for a {} instance in {} is {}.'.format(instance_type, amazon_region, spot_prices_message)
+            'content': 'The current spot price for a {} instance in {} is \n{}.'.format(instance_type, amazon_region, spot_prices_message)
+        }
+    )
+
+def get_cheapest_spot_price(intent_request):
+    logger.debug('Current Intent: {}'.format(intent_request['currentIntent']))
+    current = intent_request.get('currentIntent')
+    slots = current.get('slots') if current else None
+    amazon_region = slots.get('AmazonRegion') if slots else None
+    confirmation_status = current.get('confirmationStatus') if current else None
+    session_attributes = intent_request['sessionAttributes'] if intent_request.get('sessionAttributes') is not None else {}
+
+    if intent_request['invocationSource'] == 'DialogCodeHook':
+        # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
+        validation_result = validate_get_cheapest_spot_price(intent_request['currentIntent']['slots'])
+        if not validation_result['isValid']:
+            slots[validation_result['violatedSlot']] = None
+            return elicit_slot(
+                session_attributes,
+                intent_request['currentIntent']['name'],
+                slots,
+                validation_result['violatedSlot'],
+                validation_result['message']
+            )
+
+        # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
+        return delegate(session_attributes, slots)
+
+
+    # # Display value. Call backend
+    # We get the info and we format the answer
+
+    # first we format the inputs
+    cpu = slots.get('CPUs') if slots.get('CPUs') else '1'
+
+    if not slots.get('Memory') or not slots.get('Memory')[0].isdigit():
+        memory = '1'
+    else:
+        # we transform the memory into digits only
+        if slots.get('Memory').isdigit():
+            memory = slots.get('Memory')
+        else:
+            memory = ''
+            for c in slots.get('Memory'):
+                if c.isdigit():
+                    memory += str(c)
+                else:
+                    break
+
+    #spot_prices_result = get_price_history([], amazon_region)
+    # spot_prices_message = format_price_answer(spot_prices_result)
+
+
+    logger.debug('Region: {} memory: {} cpu: {}'.format(amazon_region, memory, cpu))
+    return close(
+        session_attributes,
+        'Fulfilled',
+        {
+            'contentType': 'PlainText',
+            'content': 'Region: {} memory: {} cpu: {}'.format(amazon_region, memory, cpu)
         }
     )
 
@@ -628,12 +738,10 @@ def dispatch(intent_request):
     intent_name = intent_request['currentIntent']['name']
 
     # Dispatch to your bot's intent handlers
-    if intent_name == 'BookHotel':
-        return book_hotel(intent_request)
-    elif intent_name == 'BookCar':
-        return book_car(intent_request)
-    elif intent_name == 'GetCurrentSpotInstancePrice':
+    if intent_name == 'GetCurrentSpotInstancePrice':
         return get_current_spot_price(intent_request)
+    elif intent_name == 'GetCheapestSpotInstancesWithAtLeast':
+        return get_cheapest_spot_price(intent_request)
 
     raise Exception('Intent with name ' + intent_name + ' not supported')
 
@@ -646,9 +754,6 @@ def lambda_handler(event, context):
     Route the incoming request based on intent.
     The JSON body of the request is provided in the event slot.
     """
-    # By default, treat the user request as coming from the America/New_York time zone.
-    os.environ['TZ'] = 'America/New_York'
-    time.tzset()
     logger.debug('event.bot.name={}'.format(event['bot']['name']))
 
     return dispatch(event)
