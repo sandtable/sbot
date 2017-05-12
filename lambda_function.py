@@ -22,6 +22,84 @@ logger.setLevel(logging.DEBUG)
 logging.getLogger('botocore').setLevel(logging.CRITICAL)
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
+# tuple vCPU, Memory (in GB)
+INSTANCE_TYPES = {'t2.nano': (1,0.5),
+                  't2.micro': (1,1), 
+                  't2.small': (1,2), 
+                  't2.medium': (2,4), 
+                  't2.large': (2,8), 
+                  't2.xlarge': (4,16), 
+                  't2.2xlarge': (8,32), 
+                  'm4.large': (2,8), 
+                  'm4.xlarge': (4,16), 
+                  'm4.2xlarge': (8,32), 
+                  'm4.4xlarge': (16,64), 
+                  'm4.10xlarge': (40,160), 
+                  'm4.16xlarge': (64,256), 
+                  'm3.medium': (1,3.75), 
+                  'm3.large': (2,7.5), 
+                  'm3.xlarge': (4,15), 
+                  'm3.2xlarge': (8,30), 
+                  'c4.large': (2,3.75), 
+                  'c4.xlarge': (4,7.5), 
+                  'c4.2xlarge': (8,15), 
+                  'c4.4xlarge': (16,30), 
+                  'c4.8xlarge': (36,60), 
+                  'c3.large': (2,3.75), 
+                  'c3.xlarge': (4,7.5), 
+                  'c3.2xlarge': (8,15), 
+                  'c3.4xlarge': (16,30), 
+                  'c3.8xlarge': (32,60), 
+                  'r3.large': (2,15.25), 
+                  'r3.xlarge': (4,30.5), 
+                  'r3.2xlarge': (8,61), 
+                  'r3.4xlarge': (16,122), 
+                  'r3.8xlarge': (32,244), 
+                  'r4.large': (2,15.25), 
+                  'r4.xlarge': (4,30.5), 
+                  'r4.2xlarge': (8,61), 
+                  'r4.4xlarge': (16,122), 
+                  'r4.8xlarge': (32,244), 
+                  'r4.16xlarge': (64,488), 
+                  'x1.16xlarge': (64,976), 
+                  'x1.32xlarge': (128,1952), 
+                  'd2.xlarge': (4,30.5), 
+                  'd2.2xlarge': (8,61), 
+                  'd2.4xlarge': (16,122), 
+                  'd2.8xlarge': (36,244), 
+                  'i2.xlarge': (4,30.5), 
+                  'i2.2xlarge': (8,61), 
+                  'i2.4xlarge': (16,122), 
+                  'i2.8xlarge': (32,244), 
+                  'i3.large': (2,15.25), 
+                  'i3.xlarge': (4,30.5), 
+                  'i3.2xlarge': (8,61), 
+                  'i3.4xlarge': (16,122), 
+                  'i3.8xlarge': (32,244), 
+                  'i3.16xlarge': (64,488), 
+                  'f1.2xlarge': (8,122), 
+                  'f1.16xlarge': (64,976), 
+                  'p2.xlarge': (4,61), 
+                  'p2.8xlarge': (32,488), 
+                  'p2.16xlarge': (64,732), 
+                  'g2.2xlarge': (8,15), 
+                  'g2.8xlarge': (32,60), 
+                  'm1.small': (1,1.7), 
+                  'm1.medium': (1,3.75), 
+                  'm1.large': (2,7.5), 
+                  'm1.xlarge': (4,15), 
+                  'c1.medium': (2,1.7), 
+                  'c1.xlarge': (8,7), 
+                  'cc2.8xlarge': (32,60.5), 
+                  'm2.xlarge': (2,17.1), 
+                  'm2.2xlarge': (4,34.2), 
+                  'm2.4xlarge': (8,68.4), 
+                  'cr1.8xlarge': (32,244), 
+                  'hi1.4xlarge': (16,60.5), 
+                  'hs1.8xlarge': (16,117), 
+                  'cg1.4xlarge': (16,22.5), 
+                  't1.micro': (1,0.6)
+                }
 
 # --- Helpers that build all of the responses ---
 
@@ -161,17 +239,7 @@ def isvalid_date(date):
 
 def isvalid_instance_type(instance_type):
     # TODO: use regex instead of fixed list
-    instance_types = ['t2.nano', 't2.micro', 't2.small', 't2.medium', 't2.large', 't2.xlarge', 't2.2xlarge', 
-                      'm4.large', 'm4.xlarge', 'm4.2xlarge', 'm4.4xlarge', 'm4.10xlarge', 'm4.16xlarge', 'm3.medium', 
-                      'm3.large', 'm3.xlarge', 'm3.2xlarge', 'c4.large', 'c4.xlarge', 'c4.2xlarge', 'c4.4xlarge', 
-                      'c4.8xlarge', 'c3.large', 'c3.xlarge', 'c3.2xlarge', 'c3.4xlarge', 'c3.8xlarge', 'r3.large', 
-                      'r3.xlarge', 'r3.2xlarge', 'r3.4xlarge', 'r3.8xlarge', 'r4.large', 'r4.xlarge', 'r4.2xlarge', 
-                      'r4.4xlarge', 'r4.8xlarge', 'r4.16xlarge', 'x1.16xlarge', 'x1.32xlarge', 'd2.xlarge', 'd2.2xlarge', 
-                      'd2.4xlarge', 'd2.8xlarge', 'i2.xlarge', 'i2.2xlarge', 'i2.4xlarge', 'i2.8xlarge', 'i3.large', 
-                      'i3.xlarge', 'i3.2xlarge', 'i3.4xlarge', 'i3.8xlarge', 'i3.16xlarge', 'f1.2xlarge', 'f1.16xlarge', 
-                      'p2.xlarge', 'p2.8xlarge', 'p2.16xlarge', 'g2.2xlarge', 'g2.8xlarge', 'm1.small', 'm1.medium', 
-                      'm1.large', 'm1.xlarge', 'c1.medium', 'c1.xlarge', 'cc2.8xlarge', 'm2.xlarge', 'm2.2xlarge', 
-                      'm2.4xlarge', 'cr1.8xlarge', 'hi1.4xlarge', 'hs1.8xlarge', 'cg1.4xlarge', 't1.micro']
+    instance_types = INSTANCE_TYPES.keys()
     return instance_type.lower() in instance_types
 
 def isvalid_amazon_region(amazon_region):
@@ -201,6 +269,20 @@ def add_days(date, number_of_days):
     new_date = dateutil.parser.parse(date).date()
     new_date += datetime.timedelta(days=number_of_days)
     return new_date.strftime('%Y-%m-%d')
+
+def get_instances(cpu,memory):
+    """
+    Return a list of instances that fulfill the requirements
+    """
+    cpu = int(cpu)
+    memory = int(memory)
+    instances = []
+
+    for instance, resource in INSTANCE_TYPES.iteritems():
+        if resource[0] >= cpu and resource[1] >= memory:
+            instances.append(instance)
+
+    return instances
 
 
 def build_validation_result(isvalid, violated_slot, message_content):
@@ -361,8 +443,7 @@ def validate_get_cheapest_spot_price(slots):
 
 """ --- Backend function getting the requested information --- """
 
-def get_price_history(instance_types, amazon_region):
-
+def call_spot_price_api(instance_types, amazon_region):
     client = boto3.client('ec2', region_name=amazon_region)
 
     try:
@@ -375,12 +456,49 @@ def get_price_history(instance_types, amazon_region):
         logger.exception(e)
         return []
 
+    return response
+
+
+def get_price_history(instance_type, amazon_region):
+
+    response = call_spot_price_api(instance_type, amazon_region)
+
     prices = []
     # return a list of tuples [(price, availability-zone)]
     for price in response['SpotPriceHistory']:
         prices.append((float(price['SpotPrice']), price['AvailabilityZone']))
 
     return prices
+
+
+def get_cheapest_instance(instances, amazon_region):
+
+    if instances:
+        response = call_spot_price_api(instances, amazon_region)
+
+        # we first find the cheapest instance type
+        minimum_price = float('inf')
+        instance_type = ''
+        availability_zone = ''
+        for instance in response['SpotPriceHistory']:
+            price = round(float(instance['SpotPrice']), 2)
+            if price < minimum_price:
+                minimum_price = price
+                instance_type = instance['InstanceType']
+                availability_zone = instance['AvailabilityZone']
+
+        prices = []
+        # if we found something, we get the other instance types with the same price
+        if instance_type:
+            for instance in response['SpotPriceHistory']:
+                price = round(float(instance['SpotPrice']), 2)
+                if price == minimum_price:
+                    prices.append((instance['InstanceType'], price, instance['AvailabilityZone']))
+
+        return prices
+    else:
+        return []
+
 
 def format_price_answer(spot_prices):
     """
@@ -389,6 +507,18 @@ def format_price_answer(spot_prices):
     """
     return "\n".join("*{:.2f}$* in {}".format(*price) for price in spot_prices)
 
+
+def format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu):
+    """
+    spot_prices_result is a list of tuples [(instance_type, price, availability-zone)]
+    Return a string
+    """
+    message = 'The cheapest instances in {} with at least {} GB of memory and {} CPUs are currently at *{}$*. The instance types are: \n'.format(amazon_region, memory, cpu, spot_prices_result[0][1])
+    instances = ""
+    for instance in spot_prices_result:
+        instances += '{} ({} vCPUs, {} GB in {})\n'.format(instance[0], INSTANCE_TYPES.get(instance[0])[0], INSTANCE_TYPES.get(instance[0])[1], instance[2])
+    message += instances
+    return message
 
 """ --- Functions that control the bot's behavior --- """
 
@@ -711,17 +841,21 @@ def get_cheapest_spot_price(intent_request):
                 else:
                     break
 
-    #spot_prices_result = get_price_history([], amazon_region)
-    # spot_prices_message = format_price_answer(spot_prices_result)
+    instances = get_instances(cpu,memory)
+    spot_prices_result = get_cheapest_instance(instances, amazon_region)
 
+    if not spot_prices_result:
+        message = "Sorry, we couldn't find instances available in {} with at least {} GB of memory and {} CPUs.".format(amazon_region, memory, cpu)
+    else:
+        message = format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu)
 
-    logger.debug('Region: {} memory: {} cpu: {}'.format(amazon_region, memory, cpu))
+    logger.debug(message)
     return close(
         session_attributes,
         'Fulfilled',
         {
             'contentType': 'PlainText',
-            'content': 'Region: {} memory: {} cpu: {}'.format(amazon_region, memory, cpu)
+            'content': message
         }
     )
 
