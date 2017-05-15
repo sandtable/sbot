@@ -513,7 +513,7 @@ def format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu):
     spot_prices_result is a list of tuples [(instance_type, price, availability-zone)]
     Return a string
     """
-    message = 'The cheapest instances in {} with at least {} GB of memory and {} CPUs are currently at *{}$*. The instance types are: \n'.format(amazon_region, memory, cpu, spot_prices_result[0][1])
+    message = 'The cheapest instances in {} with at least {} GB of memory and {} CPUs are currently at *{:.2f}$*. The instance types are: \n'.format(amazon_region, memory, cpu, spot_prices_result[0][1])
     instances = ""
     for instance in spot_prices_result:
         instances += '{} ({} vCPUs, {} GB in {})\n'.format(instance[0], INSTANCE_TYPES.get(instance[0])[0], INSTANCE_TYPES.get(instance[0])[1], instance[2])
