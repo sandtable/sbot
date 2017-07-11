@@ -425,7 +425,7 @@ def get_cheapest_spot_price(intent_request):
     cpu = slots.get('CPUs') if slots.get('CPUs') else '1'
 
     if not slots.get('Memory') or not slots.get('Memory')[0].isdigit():
-        memory = '1'
+        memory = '0'
     else:
         # we transform the memory into digits only
         if slots.get('Memory').isdigit():
