@@ -251,14 +251,18 @@ def validate_get_cheapest_spot_price(slots):
             'We currently only support GB as a memory unit. How much memory do you require in GB?'
         )
 
+    return {'isValid': True}
 
-    # if instance_type and amazon_region and not get_price_history([instance_type], amazon_region):
-    #     return build_validation_result(
-    #         False,
-    #         'InstanceType',
-    #         ('I am afraid I cannot get this information. {} might not be available as a spot instance in {}. '
-    #          'Please enter another instance type').format(instance_type, amazon_region)
-    #     )
+
+def validate_get_instance_types(slots):
+    memory = slots.get('Memory') if slots else None
+
+    if memory and not isvalid_memory(memory):
+        return build_validation_result(
+            False,
+            'Memory',
+            'We currently only support GB as a memory unit. How much memory do you require in GB?'
+        )
 
     return {'isValid': True}
 
@@ -343,6 +347,20 @@ def format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu):
         instances += '{} ({} vCPUs, {} GB in {})\n'.format(instance[0], INSTANCE_TYPES.get(instance[0])[0], INSTANCE_TYPES.get(instance[0])[1], instance[2])
     message += instances
     return message
+
+
+def format_instance_types_answer(instances, memory, cpu):
+    """
+    spot_prices_result is a list of tuples [(instance_type, price, availability-zone)]
+    Return a string
+    """
+    message = 'The instance types with at least {} GB of memory and {} CPUs are: \n'.format(memory, cpu)
+    formatted_instances = ''
+    for instance in instances:
+        formatted_instances += '{} ({} vCPUs, {} GB)\n'.format(instance, INSTANCE_TYPES.get(instance)[0], INSTANCE_TYPES.get(instance)[1])
+    message += formatted_instances
+    return message
+
 
 """ --- Functions that control the bot's behavior --- """
 
@@ -457,6 +475,67 @@ def get_cheapest_spot_price(intent_request):
         }
     )
 
+
+def get_instance_types(intent_request):
+    logger.debug('Current Intent: {}'.format(intent_request['currentIntent']))
+    current = intent_request.get('currentIntent')
+    slots = current.get('slots') if current else None
+    session_attributes = intent_request['sessionAttributes'] if intent_request.get('sessionAttributes') is not None else {}
+
+    if intent_request['invocationSource'] == 'DialogCodeHook':
+        # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
+        validation_result = validate_get_instance_types(intent_request['currentIntent']['slots'])
+        if not validation_result['isValid']:
+            slots[validation_result['violatedSlot']] = None
+            return elicit_slot(
+                session_attributes,
+                intent_request['currentIntent']['name'],
+                slots,
+                validation_result['violatedSlot'],
+                validation_result['message']
+            )
+
+        # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
+        return delegate(session_attributes, slots)
+
+    # # Display value. Call backend
+    # We get the info and we format the answer
+
+    # first we format the inputs
+    cpu = slots.get('CPUs') if slots.get('CPUs') else '1'
+
+    if not slots.get('Memory') or not slots.get('Memory')[0].isdigit():
+        memory = '0'
+    else:
+        # we transform the memory into digits only
+        if slots.get('Memory').isdigit():
+            memory = slots.get('Memory')
+        else:
+            memory = ''
+            for c in slots.get('Memory'):
+                if c.isdigit():
+                    memory += str(c)
+                else:
+                    break
+
+    instances = get_instances(cpu, memory)
+
+    if not instances:
+        message = "Sorry, we couldn't find instances available " + \
+            "with at least {} GB of memory and {} CPUs.".format(memory, cpu)
+    else:
+        message = format_instance_types_answer(instances, memory, cpu)
+
+    logger.debug(message)
+    return close(
+        session_attributes,
+        'Fulfilled',
+        {
+            'contentType': 'PlainText',
+            'content': message
+        }
+    )
+
 # --- Intents ---
 
 
@@ -474,6 +553,8 @@ def dispatch(intent_request):
         return get_current_spot_price(intent_request)
     elif intent_name == 'GetCheapestSpotInstancesWithAtLeast':
         return get_cheapest_spot_price(intent_request)
+    elif intent_name == 'GetInstanceTypes':
+        return get_instance_types(intent_request)
 
     raise Exception('Intent with name ' + intent_name + ' not supported')
 
