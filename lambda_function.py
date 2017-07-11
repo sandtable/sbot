@@ -258,6 +258,7 @@ def validate_get_cheapest_spot_price(slots):
 
 """ --- Backend function getting the requested information --- """
 
+
 def call_spot_price_api(instance_types, amazon_region):
     client = boto3.client('ec2', region_name=amazon_region)
 
@@ -296,7 +297,7 @@ def get_cheapest_instance(instances, amazon_region):
         instance_type = ''
         availability_zone = ''
         for instance in response['SpotPriceHistory']:
-            price = round(float(instance['SpotPrice']), 2)
+            price = float(instance['SpotPrice'])
             if price < minimum_price:
                 minimum_price = price
                 instance_type = instance['InstanceType']
@@ -306,7 +307,7 @@ def get_cheapest_instance(instances, amazon_region):
         # if we found something, we get the other instance types with the same price
         if instance_type:
             for instance in response['SpotPriceHistory']:
-                price = round(float(instance['SpotPrice']), 2)
+                price = float(instance['SpotPrice'])
                 if price == minimum_price:
                     prices.append((instance['InstanceType'], price, instance['AvailabilityZone']))
 
@@ -320,7 +321,7 @@ def format_price_answer(spot_prices):
     Receive a list of tuples [(price, availability-zone)]
     Return a string
     """
-    return "\n".join("*{:.2f}$* per hour in {}".format(*price) for price in spot_prices)
+    return "\n".join("*{}$* per hour in {}".format(*price) for price in spot_prices)
 
 
 def format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu):
@@ -328,7 +329,8 @@ def format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu):
     spot_prices_result is a list of tuples [(instance_type, price, availability-zone)]
     Return a string
     """
-    message = 'The cheapest instances in {} with at least {} GB of memory and {} CPUs are currently at *{:.2f}$* per hour. The instance types are: \n'.format(amazon_region, memory, cpu, spot_prices_result[0][1])
+    message = 'The cheapest instances in {} with at least {} GB of memory and {} CPUs '.format(amazon_region, memory, cpu) + \
+        'are currently at *{}$* per hour. The instance types are: \n'.format(spot_prices_result[0][1])
     instances = ""
     for instance in spot_prices_result:
         instances += '{} ({} vCPUs, {} GB in {})\n'.format(instance[0], INSTANCE_TYPES.get(instance[0])[0], INSTANCE_TYPES.get(instance[0])[1], instance[2])
