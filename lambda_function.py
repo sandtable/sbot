@@ -23,83 +23,83 @@ logging.getLogger('botocore').setLevel(logging.CRITICAL)
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
 
 # tuple vCPU, Memory (in GB)
-INSTANCE_TYPES = {'t2.nano': (1,0.5),
-                  't2.micro': (1,1), 
-                  't2.small': (1,2), 
-                  't2.medium': (2,4), 
-                  't2.large': (2,8), 
-                  't2.xlarge': (4,16), 
-                  't2.2xlarge': (8,32), 
-                  'm4.large': (2,8), 
-                  'm4.xlarge': (4,16), 
-                  'm4.2xlarge': (8,32), 
-                  'm4.4xlarge': (16,64), 
-                  'm4.10xlarge': (40,160), 
-                  'm4.16xlarge': (64,256), 
-                  'm3.medium': (1,3.75), 
-                  'm3.large': (2,7.5), 
-                  'm3.xlarge': (4,15), 
-                  'm3.2xlarge': (8,30), 
-                  'c4.large': (2,3.75), 
-                  'c4.xlarge': (4,7.5), 
-                  'c4.2xlarge': (8,15), 
-                  'c4.4xlarge': (16,30), 
-                  'c4.8xlarge': (36,60), 
-                  'c3.large': (2,3.75), 
-                  'c3.xlarge': (4,7.5), 
-                  'c3.2xlarge': (8,15), 
-                  'c3.4xlarge': (16,30), 
-                  'c3.8xlarge': (32,60), 
-                  'r3.large': (2,15.25), 
-                  'r3.xlarge': (4,30.5), 
-                  'r3.2xlarge': (8,61), 
-                  'r3.4xlarge': (16,122), 
-                  'r3.8xlarge': (32,244), 
-                  'r4.large': (2,15.25), 
-                  'r4.xlarge': (4,30.5), 
-                  'r4.2xlarge': (8,61), 
-                  'r4.4xlarge': (16,122), 
-                  'r4.8xlarge': (32,244), 
-                  'r4.16xlarge': (64,488), 
-                  'x1.16xlarge': (64,976), 
-                  'x1.32xlarge': (128,1952), 
-                  'd2.xlarge': (4,30.5), 
-                  'd2.2xlarge': (8,61), 
-                  'd2.4xlarge': (16,122), 
-                  'd2.8xlarge': (36,244), 
-                  'i2.xlarge': (4,30.5), 
-                  'i2.2xlarge': (8,61), 
-                  'i2.4xlarge': (16,122), 
-                  'i2.8xlarge': (32,244), 
-                  'i3.large': (2,15.25), 
-                  'i3.xlarge': (4,30.5), 
-                  'i3.2xlarge': (8,61), 
-                  'i3.4xlarge': (16,122), 
-                  'i3.8xlarge': (32,244), 
-                  'i3.16xlarge': (64,488), 
-                  'f1.2xlarge': (8,122), 
-                  'f1.16xlarge': (64,976), 
-                  'p2.xlarge': (4,61), 
-                  'p2.8xlarge': (32,488), 
-                  'p2.16xlarge': (64,732), 
-                  'g2.2xlarge': (8,15), 
-                  'g2.8xlarge': (32,60), 
-                  'm1.small': (1,1.7), 
-                  'm1.medium': (1,3.75), 
-                  'm1.large': (2,7.5), 
-                  'm1.xlarge': (4,15), 
-                  'c1.medium': (2,1.7), 
-                  'c1.xlarge': (8,7), 
-                  'cc2.8xlarge': (32,60.5), 
-                  'm2.xlarge': (2,17.1), 
-                  'm2.2xlarge': (4,34.2), 
-                  'm2.4xlarge': (8,68.4), 
-                  'cr1.8xlarge': (32,244), 
-                  'hi1.4xlarge': (16,60.5), 
-                  'hs1.8xlarge': (16,117), 
-                  'cg1.4xlarge': (16,22.5), 
-                  't1.micro': (1,0.6)
-                }
+INSTANCE_TYPES = {'t1.micro': (1, 0.6),
+                  't2.nano': (1, 0.5),
+                  't2.micro': (1, 1),
+                  't2.small': (1, 2),
+                  't2.medium': (2, 4),
+                  't2.large': (2, 8),
+                  't2.xlarge': (4, 16),
+                  't2.2xlarge': (8, 32),
+                  'm1.small': (1, 1.7),
+                  'm1.medium': (1, 3.75),
+                  'm1.large': (2, 7.5),
+                  'm1.xlarge': (4, 15),
+                  'm2.xlarge': (2, 17.1),
+                  'm2.2xlarge': (4, 34.2),
+                  'm2.4xlarge': (8, 68.4),
+                  'm3.medium': (1, 3.75),
+                  'm3.large': (2, 7.5),
+                  'm3.xlarge': (4, 15),
+                  'm3.2xlarge': (8, 30),
+                  'm4.large': (2, 8),
+                  'm4.xlarge': (4, 16),
+                  'm4.2xlarge': (8, 32),
+                  'm4.4xlarge': (16, 64),
+                  'm4.10xlarge': (40, 160),
+                  'm4.16xlarge': (64, 256),
+                  'c1.medium': (2, 1.7),
+                  'c1.xlarge': (8, 7),
+                  'c3.large': (2, 3.75),
+                  'c3.xlarge': (4, 7.5),
+                  'c3.2xlarge': (8, 15),
+                  'c3.4xlarge': (16, 30),
+                  'c3.8xlarge': (32, 60),
+                  'c4.large': (2, 3.75),
+                  'c4.xlarge': (4, 7.5),
+                  'c4.2xlarge': (8, 15),
+                  'c4.4xlarge': (16, 30),
+                  'c4.8xlarge': (36, 60),
+                  'r3.large': (2, 15.25),
+                  'r3.xlarge': (4, 30.5),
+                  'r3.2xlarge': (8, 61),
+                  'r3.4xlarge': (16, 122),
+                  'r3.8xlarge': (32, 244),
+                  'r4.large': (2, 15.25),
+                  'r4.xlarge': (4, 30.5),
+                  'r4.2xlarge': (8, 61),
+                  'r4.4xlarge': (16, 122),
+                  'r4.8xlarge': (32, 244),
+                  'r4.16xlarge': (64, 488),
+                  'x1.16xlarge': (64, 976),
+                  'x1.32xlarge': (128, 1952),
+                  'd2.xlarge': (4, 30.5),
+                  'd2.2xlarge': (8, 61),
+                  'd2.4xlarge': (16, 122),
+                  'd2.8xlarge': (36, 244),
+                  'i2.xlarge': (4, 30.5),
+                  'i2.2xlarge': (8, 61),
+                  'i2.4xlarge': (16, 122),
+                  'i2.8xlarge': (32, 244),
+                  'i3.large': (2, 15.25),
+                  'i3.xlarge': (4, 30.5),
+                  'i3.2xlarge': (8, 61),
+                  'i3.4xlarge': (16, 122),
+                  'i3.8xlarge': (32, 244),
+                  'i3.16xlarge': (64, 488),
+                  'f1.2xlarge': (8, 122),
+                  'f1.16xlarge': (64, 976),
+                  'p2.xlarge': (4, 61),
+                  'p2.8xlarge': (32, 488),
+                  'p2.16xlarge': (64, 732),
+                  'g2.2xlarge': (8, 15),
+                  'g2.8xlarge': (32, 60),
+                  'cc2.8xlarge': (32, 60.5),
+                  'cr1.8xlarge': (32, 244),
+                  'hi1.4xlarge': (16, 60.5),
+                  'hs1.8xlarge': (16, 117),
+                  'cg1.4xlarge': (16, 22.5)
+                  }
 
 # --- Helpers that build all of the responses ---
 
@@ -147,11 +147,14 @@ def isvalid_instance_type(instance_type):
     instance_types = INSTANCE_TYPES.keys()
     return instance_type.lower() in instance_types
 
+
 def isvalid_amazon_region(amazon_region):
-    amazon_regions = ['us-east-2', 'us-east-1', 'us-west-1', 'us-west-2','ca-central-1', 'ap-south-1', 'ap-northeast-2', 
-                      'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1', 'eu-central-1', 'eu-west-1', 'eu-west-2', 
-                      'sa-east-1']
+    amazon_regions = ['us-east-2', 'us-east-1', 'us-west-1', 'us-west-2',
+                      'ca-central-1', 'ap-south-1', 'ap-northeast-2',
+                      'ap-southeast-1', 'ap-southeast-2', 'ap-northeast-1',
+                      'eu-central-1', 'eu-west-1', 'eu-west-2', 'sa-east-1']
     return amazon_region.lower() in amazon_regions
+
 
 def isvalid_memory(memory):
     """
@@ -165,7 +168,7 @@ def isvalid_memory(memory):
         return True
 
 
-def get_instances(cpu,memory):
+def get_instances(cpu, memory):
     """
     Return a list of instances that fulfill the requirements
     """
@@ -187,6 +190,7 @@ def build_validation_result(isvalid, violated_slot, message_content):
         'message': {'contentType': 'PlainText', 'content': message_content}
     }
 
+
 def validate_get_current_spot_price(slots):
     instance_type = slots.get('InstanceType') if slots else None
     amazon_region = slots.get('AmazonRegion') if slots else None
@@ -195,7 +199,8 @@ def validate_get_current_spot_price(slots):
         return build_validation_result(
             False,
             'InstanceType',
-            'We currently do not support {} as a valid instance type.  Can you try a different instance type?'.format(instance_type)
+            'We currently do not support {} as a valid instance type. '.format(instance_type) + \
+            'Can you try a different instance type?'
         )
 
     if amazon_region and not isvalid_amazon_region(amazon_region):
@@ -203,7 +208,8 @@ def validate_get_current_spot_price(slots):
         if amazon_region == 'my region':
             message = 'Sorry, I\'m not that smart! What is your region?'
         else:
-            message = 'We currently do not support {} as a valid Amazon region.  Can you try a different Amazon region?'.format(amazon_region)
+            message = 'We currently do not support {} as a valid Amazon region. '.format(amazon_region) + \
+                'Can you try a different Amazon region?'
         return build_validation_result(
             False,
             'AmazonRegion',
@@ -214,23 +220,24 @@ def validate_get_current_spot_price(slots):
         return build_validation_result(
             False,
             'InstanceType',
-            ('I am afraid I cannot get this information. {} might not be available as a spot instance in {}. '
-             'Please enter another instance type').format(instance_type, amazon_region)
+            'I am afraid I cannot get this information. {} might not be available as a spot instance in {}. '.format(instance_type, amazon_region) + \
+            'Please enter another instance type'
         )
 
     return {'isValid': True}
 
+
 def validate_get_cheapest_spot_price(slots):
     amazon_region = slots.get('AmazonRegion') if slots else None
     memory = slots.get('Memory') if slots else None
-    cpu = slots.get('CPUs') if slots else None
 
     if amazon_region and not isvalid_amazon_region(amazon_region):
         # specific message in case the person tried to get his own region information
         if amazon_region == 'my region':
             message = 'Sorry, I\'m not that smart! What is your region?'
         else:
-            message = 'We currently do not support {} as a valid Amazon region.  Can you try a different Amazon region?'.format(amazon_region)
+            message = 'We currently do not support {} as a valid Amazon region. '.format(amazon_region) + \
+                'Can you try a different Amazon region?'
         return build_validation_result(
             False,
             'AmazonRegion',
@@ -371,7 +378,6 @@ def get_current_spot_price(intent_request):
         # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
         return delegate(session_attributes, intent_request['currentIntent']['slots'])
 
-
     # Display value. Call backend
     # We get the info and we format the answer
     spot_prices_result = get_price_history([instance_type], amazon_region)
@@ -387,12 +393,13 @@ def get_current_spot_price(intent_request):
         }
     )
 
+
 def get_cheapest_spot_price(intent_request):
     logger.debug('Current Intent: {}'.format(intent_request['currentIntent']))
     current = intent_request.get('currentIntent')
     slots = current.get('slots') if current else None
     amazon_region = slots.get('AmazonRegion') if slots else None
-    confirmation_status = current.get('confirmationStatus') if current else None
+    # confirmation_status = current.get('confirmationStatus') if current else None
     session_attributes = intent_request['sessionAttributes'] if intent_request.get('sessionAttributes') is not None else {}
 
     if intent_request['invocationSource'] == 'DialogCodeHook':
@@ -410,7 +417,6 @@ def get_cheapest_spot_price(intent_request):
 
         # Otherwise, let native DM rules determine how to elicit for slots and/or drive confirmation.
         return delegate(session_attributes, slots)
-
 
     # # Display value. Call backend
     # We get the info and we format the answer
@@ -432,11 +438,12 @@ def get_cheapest_spot_price(intent_request):
                 else:
                     break
 
-    instances = get_instances(cpu,memory)
+    instances = get_instances(cpu, memory)
     spot_prices_result = get_cheapest_instance(instances, amazon_region)
 
     if not spot_prices_result:
-        message = "Sorry, we couldn't find instances available in {} with at least {} GB of memory and {} CPUs.".format(amazon_region, memory, cpu)
+        message = "Sorry, we couldn't find instances available in {} ".format(amazon_region) + \
+            "with at least {} GB of memory and {} CPUs.".format(memory, cpu)
     else:
         message = format_cheapest_answer(spot_prices_result, amazon_region, memory, cpu)
 
