@@ -1,3 +1,7 @@
+# Created by Celine Aussourd
+#
+# Copyright (c) 2017 Sandtable Ltd. All rights reserved.
+
 """
 Lex Code Hook Interface to serve sbot which provides information about
 AWS Spot prices.
