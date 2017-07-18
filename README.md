@@ -1,15 +1,18 @@
 ## What it does
 
-In Slack, you can ask SBot about the price of spot instances. 
+You can ask SBot about the price of spot instances in Slack. 
 
 You can simply ask: "What is the current price of c4.large instances?"
 
 If you are not sure about the available AWS instance types you can ask: "Which instance types have at least 30 CPU and 128GB RAM?"
 
-And finally, you can ask: "What are the cheapest instance types with at least 4 CPU and 10 GB of memory?"
+And finally, you can ask for the cheapest instance types in your region: "What are the cheapest instance types with at least 4 CPU and 10 GB of memory?"
 
-## How to try it
+## More information
 
+This project has been submitted to the AWS Chatbot Challenge 2017. [Visit the project page for more information.](https://devpost.com/software/sbot)
+
+This project uses Amazon Lex and AWS Lambda.
 
 ## What's next for SBot
 
