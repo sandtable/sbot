@@ -1,0 +1,478 @@
+{
+  "name": "Sbot",
+  "description": "Bot to get AWS spot instances prices",
+  "intents": [
+    {
+      "intentName": "GetCheapestSpotInstancesWithAtLeast",
+      "intentVersion": "51"
+    },
+    {
+      "intentName": "GetCurrentSpotInstancePrice",
+      "intentVersion": "27"
+    },
+    {
+      "intentName": "GetInstanceTypes",
+      "intentVersion": "7"
+    }
+  ],
+  "clarificationPrompt": {
+    "messages": [
+      {
+        "contentType": "PlainText",
+        "content": "Sorry, I didn't understand. You can ask me about the price of spot instances."
+      }
+    ],
+    "maxAttempts": 2,
+    "responseCard": null
+  },
+  "abortStatement": {
+    "messages": [
+      {
+        "contentType": "PlainText",
+        "content": "Sorry, I'm not able to assist at this time"
+      }
+    ],
+    "responseCard": null
+  },
+  "status": "READY",
+  "failureReason": null,
+  "lastUpdatedDate": "2017-07-18T10:54:13.448Z",
+  "createdDate": "2017-05-10T14:33:47.704Z",
+  "idleSessionTTLInSeconds": 600,
+  "voiceId": "Salli",
+  "checksum": "b19020f6-8c86-4765-ac54-8f287ca0b5ac",
+  "version": "$LATEST",
+  "locale": "en-US",
+  "childDirected": false,
+  "dependencies": {
+    "intents": [
+      {
+        "name": "GetCurrentSpotInstancePrice",
+        "description": null,
+        "slots": [
+          {
+            "name": "AmazonRegion",
+            "description": null,
+            "slotConstraint": "Required",
+            "slotType": "AmazonRegionValues",
+            "slotTypeVersion": "5",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "In which AWS region?"
+                },
+                {
+                  "contentType": "PlainText",
+                  "content": "Could you specify the AWS region?"
+                },
+                {
+                  "contentType": "PlainText",
+                  "content": "What about the AWS region?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"imageUrl\":\"http://s3.amazonaws.com/sandtable-sbot/regions.png\",\"subTitle\":\"Select one of these popular regions or enter your own.\",\"title\":\"AWS region\",\"buttons\":[{\"text\":\"EU (Ireland)\",\"value\":\"eu-west-1\"},{\"text\":\"US East (N. Virginia)\",\"value\":\"us-east-1\"},{\"text\":\"US West (N. California)\",\"value\":\"us-west-1\"},{\"text\":\"EU (London)\",\"value\":\"eu-west-2\"}]}]}"
+            },
+            "priority": 2,
+            "sampleUtterances": [],
+            "responseCard": null
+          },
+          {
+            "name": "InstanceType",
+            "description": null,
+            "slotConstraint": "Required",
+            "slotType": "InstanceTypeValues",
+            "slotTypeVersion": "7",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which instance type?"
+                },
+                {
+                  "contentType": "PlainText",
+                  "content": "What type of instance?"
+                },
+                {
+                  "contentType": "PlainText",
+                  "content": "For which instance type?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"imageUrl\":\"http://s3.amazonaws.com/sandtable-sbot/instance_type.png\",\"subTitle\":\"Select one of these instance types or enter your own.\",\"title\":\"Instance type\",\"buttons\":[{\"text\":\"r3.8xlarge (32 vCPU, 244GB)\",\"value\":\"r3.8xlarge\"},{\"text\":\"c4.8xlarge (36 vCPU, 60GB)\",\"value\":\"c4.8xlarge\"},{\"text\":\"p2.xlarge (1 GPU, 4 vCPU, 61GB)\",\"value\":\"p2.xlarge\"}]}]}"
+            },
+            "priority": 1,
+            "sampleUtterances": [],
+            "responseCard": null
+          }
+        ],
+        "sampleUtterances": [
+          "What's the {InstanceType} price in the {AmazonRegion}",
+          "{InstanceType} price in {AmazonRegion}",
+          "How much is a {InstanceType} in {AmazonRegion}",
+          "What is the current price of {InstanceType} in {AmazonRegion}",
+          "Tell me the {InstanceType} price in the {AmazonRegion}",
+          "I'd like to know the price of a {InstanceType} instance in {AmazonRegion}",
+          "What's the price of spot instances",
+          "whats the price of {InstanceType} in {AmazonRegion}",
+          "How much does an instance cost",
+          "How much for an instance"
+        ],
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+          "messageVersion": "1.0"
+        },
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+            "messageVersion": "1.0"
+          }
+        },
+        "parentIntentSignature": null,
+        "lastUpdatedDate": "2017-07-18T10:25:01.452Z",
+        "createdDate": "2017-07-18T10:25:01.452Z",
+        "version": "27",
+        "checksum": "60d2b3ba-126f-4169-8bfd-a1c893d420ad"
+      },
+      {
+        "name": "GetInstanceTypes",
+        "description": null,
+        "slots": [
+          {
+            "name": "CPUs",
+            "description": null,
+            "slotConstraint": "Optional",
+            "slotType": "AMAZON.NUMBER",
+            "slotTypeVersion": null,
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "How many CPUs?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": null
+            },
+            "priority": 2,
+            "sampleUtterances": [],
+            "responseCard": null
+          },
+          {
+            "name": "Memory",
+            "description": null,
+            "slotConstraint": "Optional",
+            "slotType": "Memory",
+            "slotTypeVersion": "7",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "How much memory (in GB)?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": null
+            },
+            "priority": 1,
+            "sampleUtterances": [],
+            "responseCard": null
+          }
+        ],
+        "sampleUtterances": [
+          "What are the instance types with at least {Memory} RAM and {CPUs} CPUs",
+          "Which types of instances have at least {Memory} of memory and {CPUs} cores",
+          "Which instance types have at least {CPUs} CPU and {Memory} RAM",
+          "What are the instance types with at least {Memory} of RAM and {CPUs} CPU",
+          "What is the instance type for {CPUs} cores and of {Memory} RAM",
+          "what's the instances type with at least {Memory} of memory and {CPUs} CPU",
+          "What are the instance types",
+          "Give me the instance type with at least {Memory} of memory",
+          "What is the instance type with at least {CPUs} cpu and {Memory} of memory",
+          "Which instances types have at least {Memory} RAM",
+          "What are the instance types with at least {CPUs} cores and {Memory} of mem",
+          "What are the instances with {Memory} RAM and {CPUs} CPUs",
+          "What are the instances with at least {CPUs} CPU and {Memory} memory"
+        ],
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+          "messageVersion": "1.0"
+        },
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+            "messageVersion": "1.0"
+          }
+        },
+        "parentIntentSignature": null,
+        "lastUpdatedDate": "2017-07-17T14:08:16.041Z",
+        "createdDate": "2017-07-17T14:08:16.041Z",
+        "version": "7",
+        "checksum": "ede31375-f924-4ee5-9d49-7022ce08efae"
+      },
+      {
+        "name": "GetCheapestSpotInstancesWithAtLeast",
+        "description": null,
+        "slots": [
+          {
+            "name": "AmazonRegion",
+            "description": null,
+            "slotConstraint": "Required",
+            "slotType": "AmazonRegionValues",
+            "slotTypeVersion": "5",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "In which AWS region?"
+                },
+                {
+                  "contentType": "PlainText",
+                  "content": "Could you specify the AWS region?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"imageUrl\":\"http://s3.amazonaws.com/sandtable-sbot/regions.png\",\"title\":\"AWS region\",\"buttons\":[{\"text\":\"EU (Ireland)\",\"value\":\"eu-west-1\"},{\"text\":\"US East (N. Virginia)\",\"value\":\"us-east-1\"},{\"text\":\"US West (N. California)\",\"value\":\"us-west-1\"},{\"text\":\"EU (London)\",\"value\":\"eu-west-2\"}]}]}"
+            },
+            "priority": 1,
+            "sampleUtterances": [],
+            "responseCard": null
+          },
+          {
+            "name": "CPUs",
+            "description": null,
+            "slotConstraint": "Optional",
+            "slotType": "AMAZON.NUMBER",
+            "slotTypeVersion": null,
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "How many CPUs?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": null
+            },
+            "priority": 4,
+            "sampleUtterances": [],
+            "responseCard": null
+          },
+          {
+            "name": "Memory",
+            "description": null,
+            "slotConstraint": "Optional",
+            "slotType": "Memory",
+            "slotTypeVersion": "7",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "How much memory (in GB)?"
+                }
+              ],
+              "maxAttempts": 2,
+              "responseCard": null
+            },
+            "priority": 3,
+            "sampleUtterances": [],
+            "responseCard": null
+          }
+        ],
+        "sampleUtterances": [
+          "What are the cheapest instances with {Memory} RAM and {CPUs} CPUs",
+          "What are the cheapest instance types in {AmazonRegion} with at least {CPUs} cores and {Memory} of mem",
+          "Which instances are the cheapest with at least {Memory} RAM",
+          "What is the price of the cheapest instances with at least {CPUs} cpu and {Memory} of memory",
+          "Give me the cheapest instance type with at least {Memory} of memory in {AmazonRegion}",
+          "What is the cheapest instance",
+          "what's the price of the cheapest instances with at least {Memory} of memory and {CPUs} CPU in {AmazonRegion}",
+          "What is the cheapest instance type for {CPUs} cores and of {Memory} RAM",
+          "What are the cheapest instance types with at least {Memory} of RAM",
+          "What are the cheapest instance types with at least {Memory} memory in {AmazonRegion}",
+          "what are the cheapest instances with at least {Memory} memory and {CPUs} CPU"
+        ],
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+          "messageVersion": "1.0"
+        },
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:004265624752:function:sbot",
+            "messageVersion": "1.0"
+          }
+        },
+        "parentIntentSignature": null,
+        "lastUpdatedDate": "2017-07-18T10:53:50.498Z",
+        "createdDate": "2017-07-18T10:53:50.498Z",
+        "version": "51",
+        "checksum": "6800d677-ed29-47f1-bfa7-91ec9729c18b"
+      }
+    ],
+    "slotTypes": [
+      {
+        "name": "AmazonRegionValues",
+        "description": "AWS region",
+        "enumerationValues": [
+          {
+            "value": "ap-south-1"
+          },
+          {
+            "value": "eu-west-2"
+          },
+          {
+            "value": "eu-west-1"
+          },
+          {
+            "value": "ap-southeast-2"
+          },
+          {
+            "value": "ap-northeast-2"
+          },
+          {
+            "value": "us-east-1"
+          },
+          {
+            "value": "sa-east-1"
+          },
+          {
+            "value": "ca-central-1"
+          },
+          {
+            "value": "us-west-1"
+          }
+        ],
+        "lastUpdatedDate": "2017-05-11T14:12:18.370Z",
+        "createdDate": "2017-05-11T14:12:18.370Z",
+        "version": "5",
+        "checksum": null
+      },
+      {
+        "name": "InstanceTypeValues",
+        "description": "AWS Instance types",
+        "enumerationValues": [
+          {
+            "value": "r3.8xlarge"
+          },
+          {
+            "value": "p2.xlarge"
+          },
+          {
+            "value": "x1.32xlarge"
+          },
+          {
+            "value": "m3.medium"
+          },
+          {
+            "value": "t2.micro"
+          },
+          {
+            "value": "t2.nano"
+          },
+          {
+            "value": "i3.2xlarge"
+          },
+          {
+            "value": "r4.16xlarge"
+          },
+          {
+            "value": "hi1.4xlarge"
+          },
+          {
+            "value": "c4.8xlarge"
+          },
+          {
+            "value": "r3.large"
+          },
+          {
+            "value": "c3.large"
+          }
+        ],
+        "lastUpdatedDate": "2017-07-11T15:32:11.838Z",
+        "createdDate": "2017-07-11T15:32:11.838Z",
+        "version": "7",
+        "checksum": null
+      },
+      {
+        "name": "Memory",
+        "description": "Computer RAM",
+        "enumerationValues": [
+          {
+            "value": "1gig"
+          },
+          {
+            "value": "66 gigs"
+          },
+          {
+            "value": "30 gigs"
+          },
+          {
+            "value": "2048PT"
+          },
+          {
+            "value": "2 TB"
+          },
+          {
+            "value": "1GB"
+          },
+          {
+            "value": "60GB"
+          },
+          {
+            "value": "3GB"
+          },
+          {
+            "value": "1024MB"
+          },
+          {
+            "value": "30gb"
+          },
+          {
+            "value": "10 KB"
+          },
+          {
+            "value": "500GB"
+          },
+          {
+            "value": "11 GB"
+          },
+          {
+            "value": "16GB"
+          },
+          {
+            "value": "16gb"
+          },
+          {
+            "value": "128GB"
+          },
+          {
+            "value": "128gb"
+          },
+          {
+            "value": "32 GB"
+          },
+          {
+            "value": "8 GB"
+          },
+          {
+            "value": "60gig"
+          },
+          {
+            "value": "1 GB"
+          },
+          {
+            "value": "6 gb"
+          }
+        ],
+        "lastUpdatedDate": "2017-07-17T14:07:40.546Z",
+        "createdDate": "2017-07-17T14:07:40.546Z",
+        "version": "7",
+        "checksum": null
+      }
+    ]
+  }
+}
