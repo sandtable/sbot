@@ -162,8 +162,7 @@ def isvalid_memory(memory):
     for unit in invalid_units:
         if unit in memory.lower():
             return False
-    else:
-        return True
+    return True
 
 
 def get_instances(cpu, memory):
@@ -274,14 +273,10 @@ def call_spot_price_api(instance_types, amazon_region):
 
 
 def get_price_history(instance_type, amazon_region):
+    """Return price history as list of tuples [(price, availability-zone)]"""
     response = call_spot_price_api(instance_type, amazon_region)
-
-    prices = []
-    # return a list of tuples [(price, availability-zone)]
-    for price in response['SpotPriceHistory']:
-        prices.append((float(price['SpotPrice']), price['AvailabilityZone']))
-
-    return prices
+    return [(float(price['SpotPrice']), price['AvailabilityZone'])
+            for price in response['SpotPriceHistory']]
 
 
 def get_cheapest_instance(instances, amazon_region):
@@ -289,32 +284,35 @@ def get_cheapest_instance(instances, amazon_region):
     Return the prices ([isntance_type, price, availability_zone])
     of the cheapeast instances
     """
-    if instances:
-        # get the current spot prices
-        response = call_spot_price_api(instances, amazon_region)
-
-        # we first find the cheapest instance type
-        minimum_price = float('inf')
-        is_instance_type = False
-        for instance in response['SpotPriceHistory']:
-            price = float(instance['SpotPrice'])
-            if price < minimum_price:
-                minimum_price = price
-                is_instance_type = True
-
-        prices = []
-        # if we found something,
-        # we get all the instance types with that price
-        if is_instance_type:
-            for instance in response['SpotPriceHistory']:
-                price = float(instance['SpotPrice'])
-                if price == minimum_price:
-                    instance_type = instance['InstanceType']
-                    availability_zone = instance['AvailabilityZone']
-                    prices.append((instance_type, price, availability_zone))
-        return prices
-    else:
+    if not instances:
         return []
+
+    # get the current spot prices
+    response = call_spot_price_api(instances, amazon_region)
+
+    # we first find the cheapest instance type
+    minimum_price = float('inf')
+    is_instance_type = False
+    for instance in response['SpotPriceHistory']:
+        price = float(instance['SpotPrice'])
+        if price < minimum_price:
+            minimum_price = price
+            is_instance_type = True
+
+    if not is_instance_type:
+        return []
+
+    # if we found something,
+    # we get all the instance types with that price
+    prices = []
+    for instance in response['SpotPriceHistory']:
+        price = float(instance['SpotPrice'])
+        if price == minimum_price:
+            instance_type = instance['InstanceType']
+            availability_zone = instance['AvailabilityZone']
+            prices.append((instance_type, price, availability_zone))
+
+    return prices
 
 
 def format_price_answer(spot_prices):
